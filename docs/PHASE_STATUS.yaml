@@ -1,6 +1,6 @@
 schema_version: 1
-current_phase: 0
-authorization: phase_0_only
+current_phase: 1
+authorization: phase_1_approved
 last_updated: "2026-09-01"
 
 phases:
@@ -22,8 +22,10 @@ phases:
       - mac_verify_items_reported
   phase_1:
     name: Core AI Hub MVP
-    status: locked
-    implementation_authorized: false
+    status: in_progress
+    implementation_authorized: true
+    authorized_at: "2026-09-01"
+    authorization_source: explicit_user_approval
     unlock_requires:
       - phase_0_completion_report
       - explicit_user_approval
@@ -49,7 +51,7 @@ phases:
       - phase_3_completion_report
       - explicit_user_approval
 
-next_authorization_phrase: "Proceed with Phase 1."
+next_authorization_phrase: "Proceed with Phase 2."
 notes:
   - Planning text and stubs do not authorize a locked phase.
   - Physical Mac mini checks remain MAC-VERIFY until observed on target hardware.

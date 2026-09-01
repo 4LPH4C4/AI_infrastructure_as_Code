@@ -24,7 +24,7 @@ The current authorization is in `PHASE_STATUS.yaml`. Only the current phase may 
 
 An authorization should be unambiguous, for example: `Proceed with Phase 1.`
 
-## Phase 0 — Foundation and Architecture (current)
+## Phase 0 — Foundation and Architecture (complete)
 
 Phase 0 creates documentation, domain/config/event/runtime contracts, safe local tooling, tests, and macOS skeletons. It does not create a useful fake Slack, Codex, orchestrator, worker, database, or Pixel implementation.
 
@@ -59,7 +59,7 @@ These items are not blockers without the target hardware, but must not be report
 - Slack Socket Mode connectivity after Phase 1 implementation;
 - full fresh-machine and reboot acceptance flows.
 
-## Exact Phase 1 backlog — locked pending approval
+## Exact Phase 1 backlog — current and authorized
 
 This is the proposed implementation order and scope. Changes to it require an explicit decision during Phase 1 planning. Completing an item never authorizes starting Phase 2.
 

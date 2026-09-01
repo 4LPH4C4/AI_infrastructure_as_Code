@@ -17,10 +17,10 @@ The authorized phase is read from `docs/PHASE_STATUS.yaml`.
 
 **Never implement a future phase without explicit phase authorization from the user.** A roadmap entry, TODO, interface, test fixture, or suggestive request is not authorization. Finish the current phase, run its gates, report, and stop.
 
-At Phase 0:
+At Phase 1:
 
-- allowed: architecture/config/domain contracts, disabled adapters, deterministic foundational tests, safe bootstrap and documentation;
-- prohibited: live Slack or Slack authentication, real Codex invocation, full orchestration, multi-agent execution, queue workers, automatic Git editing, database/Redis/n8n infrastructure, Pixel UI, production dashboards, or automatic deployment.
+- allowed: Slack Socket Mode behind the gateway, durable task creation, SQLite persistence, a basic single-Developer orchestrator, one Codex runtime adapter, isolated project workspaces and locks, structured events/logs, local health/readiness, launchd operations, doctor checks, and offline fake-runtime integration tests;
+- prohibited: reviewer/QA or other multi-agent chains, dynamic team generation, Redis/PostgreSQL/n8n infrastructure, Pixel UI, public inbound exposure, automatic push/merge/deploy, or Phase 2+ integrations.
 
 ## Dependency and directory rules
 

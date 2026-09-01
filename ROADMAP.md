@@ -18,6 +18,8 @@ Progress is phase-gated. A later phase remains locked until the current phase pa
 
 ## Phase 1 — Core AI Hub MVP
 
+**Status:** In progress; explicitly authorized on 2026-09-01.
+
 **Goal:** deliver the smallest end-to-end, single-Developer flow:
 
 ```text

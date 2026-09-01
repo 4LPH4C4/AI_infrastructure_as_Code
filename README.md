@@ -2,9 +2,9 @@
 
 Mac Mini AI Hub is an infrastructure-as-code and agent-platform-as-code project for a single, always-on Apple Silicon Mac mini. It is intended to host reusable AI agents, product-specific teams, project workspaces, scheduled automations, and human interfaces without turning a personal server into a distributed platform.
 
-> **Current phase: Phase 0 complete — awaiting explicit Phase 1 approval**
+> **Current phase: Phase 1 — Core AI Hub MVP (in progress)**
 >
-> Phase 1 and later are locked. There is no live Slack bot, Codex execution, worker, launchd service, or Pixel Agent Office in Phase 0.
+> Phase 2 and later are locked. Phase 1 is limited to the approved single-Developer Slack-to-Codex flow; multi-agent workflows and Pixel Agent Office remain out of scope.
 
 The engineering priority is:
 
