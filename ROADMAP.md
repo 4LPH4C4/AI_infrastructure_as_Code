@@ -4,7 +4,7 @@ Progress is phase-gated. A later phase remains locked until the current phase pa
 
 ## Phase 0 — Foundation and Architecture
 
-**Status:** Complete on 2026-09-01; target-Mac checks remain `[MAC-VERIFY]`. Phase 1 is locked pending explicit user approval.
+**Status:** Complete on 2026-09-01; Phase 1 was explicitly authorized on the same date.
 
 **Goal:** create a coherent, testable foundation without functioning agent automation.
 
@@ -18,7 +18,7 @@ Progress is phase-gated. A later phase remains locked until the current phase pa
 
 ## Phase 1 — Core AI Hub MVP
 
-**Status:** In progress; explicitly authorized on 2026-09-01.
+**Status:** Offline implementation and QA complete on 2026-09-01; production acceptance is pending the target-Mac `[MAC-VERIFY]` checks. Phase 2 remains locked.
 
 **Goal:** deliver the smallest end-to-end, single-Developer flow:
 
@@ -37,6 +37,8 @@ Slack Socket Mode -> Gateway -> basic Orchestrator -> Codex runtime
 
 ## Phase 2 — Product Teams and Multi-Agent Workflows
 
+**Status:** Locked; requires Phase 1 production acceptance, completion-report review, and explicit user approval.
+
 **Goal:** make configurable shared and product organizations operational.
 
 **Deliverables:** team-aware routing; shared/product agent registries in execution; multiple agents per product; Developer→Reviewer→QA; delegation, task handoff, artifact provenance, permissions enforcement, richer history, and parallel-safe scheduling.
@@ -49,6 +51,8 @@ Slack Socket Mode -> Gateway -> basic Orchestrator -> Codex runtime
 
 ## Phase 3 — Pixel Agent Office
 
+**Status:** Locked.
+
 **Goal:** add a truthful, optional, low-load visual observability layer.
 
 **Deliverables:** TypeScript/Phaser browser client; SSE or WebSocket event projection; HQ overview, configuration-driven team rooms, agent detail, and task flow; real state-to-animation mapping; offline/error/idle accuracy.
@@ -60,6 +64,8 @@ Slack Socket Mode -> Gateway -> basic Orchestrator -> Codex runtime
 **Not included:** authoritative task control, fabricated activity, chain-of-thought display, 3D/heavy always-on rendering.
 
 ## Phase 4 — Automation and Advanced Integrations
+
+**Status:** Locked.
 
 **Goal:** add only integrations whose user value justifies their security and operational cost.
 

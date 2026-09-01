@@ -17,9 +17,9 @@ The authorized phase is read from `docs/PHASE_STATUS.yaml`.
 
 **Never implement a future phase without explicit phase authorization from the user.** A roadmap entry, TODO, interface, test fixture, or suggestive request is not authorization. Finish the current phase, run its gates, report, and stop.
 
-At Phase 1:
+Phase 1 implementation is complete and awaiting target-Mac verification. While this status remains:
 
-- allowed: Slack Socket Mode behind the gateway, durable task creation, SQLite persistence, a basic single-Developer orchestrator, one Codex runtime adapter, isolated project workspaces and locks, structured events/logs, local health/readiness, launchd operations, doctor checks, and offline fake-runtime integration tests;
+- allowed: Phase 1 QA fixes, documentation, configuration, live fixture validation, launchd/reboot verification, and recovery drills within the existing single-Developer flow;
 - prohibited: reviewer/QA or other multi-agent chains, dynamic team generation, Redis/PostgreSQL/n8n infrastructure, Pixel UI, public inbound exposure, automatic push/merge/deploy, or Phase 2+ integrations.
 
 ## Dependency and directory rules
@@ -36,7 +36,7 @@ events -> read-only observability consumers
 
 - `src/macmini_ai_hub/domain/`: dependency-light entities, states, events, and policies. It must not import adapters or frameworks.
 - `src/macmini_ai_hub/config/`: strict configuration loading and cross-registry validation. Never load secrets into version-controlled models.
-- `src/macmini_ai_hub/runtime/`: execution protocol and DTOs. Raw Codex subprocess calls belong only in a future adapter.
+- `src/macmini_ai_hub/runtime/`: execution protocol, DTOs, and the single approved Codex adapter. Raw Codex subprocess calls belong only in that adapter.
 - `config/`: public example registries only.
 - `workspace/`: generated runtime state. Do not commit contents except intentional placeholders.
 - `workspace/projects/<project>/`: separate product repositories. Never assume the AI Hub repository is a task working directory.
@@ -107,7 +107,7 @@ Bind future services to localhost/private LAN unless a reviewed requirement says
 - Detect Homebrew and tool paths; do not blindly hard-code `/opt/homebrew`.
 - Shell scripts use `set -euo pipefail` where appropriate, are modular and idempotent, and do not fabricate successful checks.
 - Mark untested physical-machine behavior exactly as `[MAC-VERIFY]` in code output and documentation.
-- Phase 0 `[MAC-VERIFY]` includes Apple Silicon/Homebrew/CLT behavior, package installation, workspace permissions, GitHub and Codex authentication, Docker, power/sleep configuration, launchd load/reboot recovery, and later Slack connectivity.
+- Phase 1 `[MAC-VERIFY]` includes Apple Silicon/Homebrew/CLT behavior, package installation, workspace permissions, GitHub and Codex authentication/sandbox behavior, power/sleep configuration, launchd load/reboot recovery, and live Slack connectivity.
 - Never change machine secrets automatically. `.env.example` contains names and documentation, never values.
 
 ## Workspace and persistence

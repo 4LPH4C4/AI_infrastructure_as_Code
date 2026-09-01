@@ -1,20 +1,42 @@
-# launchd placeholder
+# launchd user service
 
-Production service management is intentionally deferred to Phase 1. Phase 0 does
-not install, load, start, or claim to validate a `launchd` service.
+Phase 1 runs the hub as the current user's exact launchd target:
 
-The adjacent plist is a disabled design marker, not an installable service. It
-runs `/usr/bin/false`, contains no real runtime command, and must not be copied to
-`~/Library/LaunchAgents` or `/Library/LaunchDaemons`.
+```text
+gui/<uid>/com.macmini-ai-hub.service
+```
 
-Phase 1 must replace it with a reviewed definition that establishes:
+The committed plist is a tokenized, secret-free template. `render-plist.sh`
+resolves the repository and `uv` executable to absolute paths and rejects paths
+that cannot be substituted safely. The generated PATH includes the resolved
+Codex and `uv` executable directories, including a standalone user install. It
+never reads `.env` or embeds credentials.
 
-- the correct per-user or system service boundary;
-- an absolute program path and working directory;
-- explicit, non-secret environment handling;
-- stdout/stderr log paths under the runtime workspace;
-- restart throttling and graceful shutdown behavior;
-- least-privilege file ownership and permissions.
+Install the service definition without loading or starting it:
 
-`[MAC-VERIFY]` Loading, unloading, log rotation, failure recovery, and automatic
-recovery after reboot must be tested on the production Mac mini in Phase 1.
+```bash
+./launchd/install.sh
+```
+
+Then use the lifecycle wrappers:
+
+```bash
+./scripts/start.sh
+./scripts/status.sh
+./scripts/restart.sh
+./scripts/stop.sh
+```
+
+Remove only the exact plist whose embedded label matches the expected service:
+
+```bash
+./launchd/uninstall.sh
+```
+
+The user LaunchAgent runs `uv run --locked --no-dev ai-hub serve` from the
+repository root. Logs are written to `workspace/logs/ai-hub.stdout.log` and
+`workspace/logs/ai-hub.stderr.log`. A non-successful exit is restarted with
+launchd throttling; an intentional clean stop remains stopped.
+
+`[MAC-VERIFY]` Run install, start, stop, crash recovery, login, reboot recovery,
+log permissions, and uninstall acceptance checks on the production Mac mini.

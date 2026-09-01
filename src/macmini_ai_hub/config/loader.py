@@ -70,14 +70,24 @@ def load_yaml_model[ModelT: BaseModel](path: str | Path, model_type: type[ModelT
     return model_type.model_validate(data)
 
 
-def load_config_bundle(config_directory: str | Path) -> ConfigBundle:
-    """Load the five version-controlled registries and validate relationships."""
+def load_config_bundle(
+    config_directory: str | Path,
+    *,
+    use_examples: bool = True,
+) -> ConfigBundle:
+    """Load the five registries and validate their cross-references.
+
+    Phase 0 callers keep using the public ``*.example.yaml`` templates. A Phase 1
+    service passes ``use_examples=False`` and therefore fails closed unless all
+    machine-local registry files exist.
+    """
 
     directory = Path(config_directory)
+    suffix = ".example.yaml" if use_examples else ".yaml"
     return ConfigBundle(
-        settings=load_yaml_model(directory / "settings.example.yaml", SettingsConfig),
-        agents=load_yaml_model(directory / "agents.example.yaml", AgentRegistry),
-        teams=load_yaml_model(directory / "teams.example.yaml", TeamRegistry),
-        projects=load_yaml_model(directory / "projects.example.yaml", ProjectRegistry),
-        permissions=load_yaml_model(directory / "permissions.example.yaml", PermissionRegistry),
+        settings=load_yaml_model(directory / f"settings{suffix}", SettingsConfig),
+        agents=load_yaml_model(directory / f"agents{suffix}", AgentRegistry),
+        teams=load_yaml_model(directory / f"teams{suffix}", TeamRegistry),
+        projects=load_yaml_model(directory / f"projects{suffix}", ProjectRegistry),
+        permissions=load_yaml_model(directory / f"permissions{suffix}", PermissionRegistry),
     )

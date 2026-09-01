@@ -1,6 +1,6 @@
 # ADR-0004: Phase 1 uses Slack Socket Mode and SQLite as the baseline
 
-- Status: Accepted for Phase 1 direction; implementation locked
+- Status: Accepted and implemented offline; target-Mac verification pending
 - Date: 2026-09-01
 
 ## Context
@@ -9,7 +9,7 @@ The first end-to-end interface will be Slack on a personal Mac behind a home net
 
 ## Decision
 
-Subject to explicit Phase 1 approval:
+Phase 1 implements the following approved decisions:
 
 1. Use Slack Bolt Socket Mode as the initial connection model. It initiates an outbound connection and does not require a public inbound webhook.
 2. Keep Slack behind an interface adapter and Agent Gateway so another connection model can be introduced without changing execution policy.

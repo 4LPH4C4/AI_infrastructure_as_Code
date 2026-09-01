@@ -20,6 +20,7 @@ from macmini_ai_hub.config.models import (
     TeamType,
     WorkingDirectoryPolicy,
 )
+from macmini_ai_hub.config.runtime import OperationalSettings, RuntimePaths
 
 __all__ = [
     "AgentDefinition",
@@ -29,10 +30,12 @@ __all__ = [
     "Environment",
     "GitSafetyPolicy",
     "LogLevel",
+    "OperationalSettings",
     "PermissionRegistry",
     "ProjectDefinition",
     "ProjectRegistry",
     "RuntimeKind",
+    "RuntimePaths",
     "Settings",
     "SettingsConfig",
     "TeamDefinition",

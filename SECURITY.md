@@ -4,11 +4,11 @@
 
 Mac Mini AI Hub runs tools that can read and modify source code, execute commands, use credentials, and contact external systems. Treat every interface request, model-produced instruction, repository file, runtime output, and integration response as potentially untrusted.
 
-Defaults are local-only, least privilege, explicit scope, no secret logging, no automatic push/merge/deploy, and human approval for destructive actions. Phase 0 defines policy and schemas; it does **not** claim OS-level sandbox or runtime enforcement.
+Defaults are local-only, least privilege, explicit scope, no secret logging, no automatic push/merge/deploy, and human approval for destructive actions. Phase 1 adds canonical workspace checks and an explicit Codex `workspace-write` sandbox with command network/web search disabled and `untrusted` approval policy. It does **not** claim that configuration metadata alone provides complete OS-level isolation.
 
 ## Supported state
 
-Security fixes are accepted only for the current phase and current main branch. Do not bypass the phase gate to add a future integration as a “security fix.” If a report concerns unimplemented Phase 1+ behavior, document the requirement in the relevant backlog/ADR and keep the phase locked.
+Security fixes are accepted only for the current phase and current main branch. Do not bypass the phase gate to add a future integration as a “security fix.” If a report concerns a locked-phase behavior, document the requirement in the relevant backlog/ADR and keep that phase locked.
 
 ## Reporting a vulnerability
 
@@ -53,6 +53,7 @@ private keys, OAuth tokens, cookies, credentials, recovery codes
 - Configuration registries contain no embedded credentials, even for private repositories.
 - Do not pass secrets on command lines when a safer environment/file-descriptor mechanism exists.
 - Redact authorization headers, token-like values, URLs with credentials, environment dumps, and sensitive request/output fields before logging, events, artifacts, or Slack delivery.
+- Reject credential-shaped task instructions before they can become durable task requests. Do not silently store a redacted credential as executable work.
 - Doctor checks presence/validity where safe and never emits values.
 - If a secret is staged or pushed, stop, rotate/revoke it, remove it from the current change, assess Git history exposure, and coordinate history remediation with the owner. Deleting the visible line is not sufficient.
 
@@ -61,11 +62,11 @@ Ignored files reduce accidents but are not a secret-management control. Review s
 ## Authentication and authorization
 
 - Each interface authenticates its source. Slack Socket Mode tokens do not by themselves authorize every project or capability.
-- Gateway authorization validates actor/source, action, project, and requested capability before task creation.
+- Phase 1 Gateway authorization uses an exact Slack actor allowlist and rejects unknown projects before task creation. Fine-grained actor-to-project/action grants remain a later permission-enforcement enhancement.
 - Agents use named permission profiles with deny-by-default capabilities: `read`, `write`, `execute`, `git`, `network`, `deploy`, and `admin`.
 - Grant only capabilities required by the role and task. `deploy` and `admin` require explicit policy and human approval even if declared.
 - Shared-team status never implies access to all product repositories or secrets.
-- Configuration permissions in Phase 0 express intent only; do not describe them as an enforced sandbox.
+- Configuration permissions express policy intent. Phase 1 checks the selected Developer profile and uses the runtime sandbox, but those controls are not a substitute for macOS account and filesystem isolation.
 
 ## Workspace and command execution
 
@@ -74,6 +75,7 @@ Ignored files reduce accidents but are not a secret-management control. Review s
 - Never use the AI Hub repository as the implicit project workspace.
 - Use explicit subprocess argument arrays, allowlisted executables/policies where practical, fixed working directories, bounded output, timeouts, cancellation, and sanitized environments.
 - Treat repository instructions, model output, filenames, branches, patches, and command output as data; never interpolate them into shell strings.
+- Ignore user Codex configuration for service runs, keep command network and web search disabled, and require approval for untrusted commands. A non-interactive run with no approval path fails the command closed.
 - Prevent symlink/path traversal from escaping task, artifact, log, lock, and project roots.
 - Acquire the project lock before a modifying task and release it in a guaranteed cleanup path.
 
@@ -102,7 +104,7 @@ Approval to commit/push normally does not authorize force-push, merge, release, 
 
 ## Git policy
 
-Future autonomous project work uses a dedicated `agent/<task-id>-<slug>` branch after validating repository identity and working-tree policy. Defaults:
+Autonomous project work uses a dedicated `agent/<task-id>-<slug>` branch created from the registered `origin/<base_branch>` or validated `origin/HEAD`, after validating repository identity and working-tree policy. Defaults:
 
 ```yaml
 auto_commit: configurable

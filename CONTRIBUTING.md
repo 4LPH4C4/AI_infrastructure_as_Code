@@ -7,7 +7,7 @@
 3. Inspect `git status` and preserve unrelated changes.
 4. Identify which contract, test, configuration example, and documentation the change affects.
 
-Do not implement a locked phase because it appears in the roadmap. Phase 1 requires explicit user approval.
+Do not implement a locked phase because it appears in the roadmap. Phase 2 remains locked until Phase 1 production acceptance and explicit user approval.
 
 ## Development setup
 
@@ -37,15 +37,17 @@ Architecture-changing contributions should add or supersede a concise ADR when t
 
 ## Testing expectations
 
-At minimum, Phase 0 changes should cover relevant cases from:
+At minimum, Phase 1 changes should cover relevant cases from:
 
 - valid and invalid configuration parsing;
 - duplicate/unknown field rejection;
 - agent/team/project/permission cross-references;
 - legal and illegal task transitions;
 - event envelope/type/timestamp validation;
-- runtime disabled behavior and DTO validation;
-- shell/static bootstrap behavior where portable.
+- runtime success/failure/timeout/cancellation and bounded redaction;
+- storage migration, concurrency, restart reconciliation, and event replay;
+- gateway authorization/deduplication and offline end-to-end lifecycle behavior;
+- workspace/origin/branch/lock failure paths and portable operations behavior.
 
 Primary automated tests never require live Slack, Codex, GitHub, Internet access, or the physical Mac mini. Do not replace a missing test with a fabricated passing doctor result.
 

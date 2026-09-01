@@ -2,8 +2,14 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
+# shellcheck source=lib/mac-service.sh
+source "${SCRIPT_DIR}/lib/mac-service.sh"
 
-printf '%s\n' "NOT IMPLEMENTED: AI Hub service startup belongs to Phase 1." >&2
-printf '%s\n' "No process was started. Repository: ${REPO_ROOT}" >&2
-exit 3
+require_macos_service
+verify_installed_service
+if ! service_is_loaded; then
+  /bin/launchctl bootstrap "gui/$(id -u)" "$(service_plist_path)"
+fi
+/bin/launchctl kickstart "$(service_target)"
+printf 'Started %s\n' "$(service_target)"
+printf '%s\n' "[MAC-VERIFY] Confirm readiness and log output on the production Mac mini."

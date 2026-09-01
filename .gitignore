@@ -9,11 +9,15 @@
 credentials/
 secrets/
 
+# Machine-local registries (version-controlled templates end in .example.yaml)
+config/*.yaml
+!config/*.example.yaml
+
 # Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.pytest-tmp/
+.pytest-tmp*/
 .mypy_cache/
 .ruff_cache/
 .coverage

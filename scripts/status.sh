@@ -2,8 +2,21 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
+# shellcheck source=lib/mac-service.sh
+source "${SCRIPT_DIR}/lib/mac-service.sh"
 
-printf '%s\n' "NOT IMPLEMENTED: AI Hub runtime status belongs to Phase 1." >&2
-printf '%s\n' "There is no Phase 0 service whose status can be reported. Repository: ${REPO_ROOT}" >&2
-exit 3
+require_macos_service
+verify_installed_service
+if ! service_is_loaded; then
+  printf 'Service is installed but not loaded: %s\n' "$(service_target)"
+  exit 1
+fi
+PID="$(service_pid)"
+if [[ -n "${PID}" ]]; then
+  printf 'launchd: running (pid %s)\n' "${PID}"
+else
+  printf '%s\n' "launchd: loaded, not running"
+fi
+
+cd -- "${SERVICE_REPO_ROOT}"
+uv run --locked --no-dev ai-hub status

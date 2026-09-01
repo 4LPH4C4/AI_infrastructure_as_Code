@@ -16,7 +16,7 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 2
 fi
 
-printf '%s\n' "Phase 0 macOS bootstrap"
+printf '%s\n' "Phase 1 macOS bootstrap"
 
 if ! /usr/bin/xcode-select -p >/dev/null 2>&1; then
   printf '%s\n' "ERROR: Xcode Command Line Tools are required." >&2
@@ -36,13 +36,13 @@ fi
 printf '%s\n' "Installing the version-controlled Homebrew baseline..."
 brew bundle --file "${BREWFILE}"
 
-printf '%s\n' "Synchronizing the locked Phase 0 Python development environment..."
+printf '%s\n' "Synchronizing the locked Phase 1 Python environment..."
 cd -- "${REPO_ROOT}"
 uv sync --locked --dev
 
 "${SCRIPT_DIR}/init-workspace.sh"
 
-printf '%s\n' "Phase 0 bootstrap completed."
-printf '%s\n' "Next: run ${REPO_ROOT}/scripts/doctor.sh"
-printf '%s\n' "NOTE: AI Hub services are not implemented until Phase 1; start.sh will not start a service."
+printf '%s\n' "Phase 1 bootstrap completed."
+printf '%s\n' "Next: configure .env and active registries, then run 'uv run --locked --no-dev ai-hub check-config'."
+printf '%s\n' "Migrate storage and install launchd explicitly only after configuration passes."
 printf '%s\n' "[MAC-VERIFY] Validate all installed tools and bootstrap output on the production Mac mini."

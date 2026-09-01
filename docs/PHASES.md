@@ -59,9 +59,9 @@ These items are not blockers without the target hardware, but must not be report
 - Slack Socket Mode connectivity after Phase 1 implementation;
 - full fresh-machine and reboot acceptance flows.
 
-## Exact Phase 1 backlog — current and authorized
+## Exact Phase 1 backlog — implemented offline, awaiting target-Mac verification
 
-This is the proposed implementation order and scope. Changes to it require an explicit decision during Phase 1 planning. Completing an item never authorizes starting Phase 2.
+P1-01 through P1-14 are implemented and pass the offline gates as of 2026-09-01: 277 tests pass with 86% statement coverage, and Ruff, mypy, Bash syntax, and the locked dependency audit pass. Live Slack, authenticated Codex fixture execution, launchd lifecycle, and reboot recovery remain `[MAC-VERIFY]`. This does not authorize Phase 2.
 
 ### P1-01 — Composition root and production configuration
 

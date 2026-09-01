@@ -1,8 +1,8 @@
 # Mac mini first boot
 
-This checklist separates the Phase 0 repository bootstrap from future runtime
-work. Commands that affect machine policy should be reviewed before execution.
-No production Mac mini validation has been performed from the development host.
+This checklist installs and operates the Phase 1 native runtime. Commands that
+affect machine policy should be reviewed before execution. No production Mac
+mini validation has been performed from the development host.
 
 ## 1. macOS baseline
 
@@ -45,8 +45,8 @@ into the repository or shell history.
    ```
 
 The bootstrap applies the Homebrew bundle, synchronizes the locked Python
-development environment, and creates the runtime workspace. It is designed to
-be idempotent. It does not start a service or install `launchd` configuration.
+environment, and creates the runtime workspace. It is designed to be idempotent.
+It does not start a service or install `launchd` configuration.
 
 ## 3. Authentication and machine configuration
 
@@ -63,24 +63,44 @@ be idempotent. It does not start a service or install `launchd` configuration.
 
 - [ ] Store recoverable secrets in a password manager or macOS Keychain. Never
   commit `.env`.
-- [ ] `[MAC-VERIFY]` Install and authenticate Codex before Phase 1 work begins.
+- [ ] `[MAC-VERIFY]` Install Codex using the reviewed official instructions at
+  <https://developers.openai.com/codex/cli>. The official macOS/Linux quickstart
+  currently shows a standalone installer; this repository deliberately does not
+  pipe a remote installer into a shell automatically.
+- [ ] `[MAC-VERIFY]` Run `codex`, sign in interactively, and verify the dedicated
+  service account can execute a disposable fixture task.
 - [ ] `[MAC-VERIFY]` Decide whether Docker is required before installing it; it is
-  not part of the Phase 0 Homebrew baseline.
+  not required by the Phase 1 native runtime baseline.
 
-Slack credentials and Socket Mode are Phase 1 work. Do not configure a live Slack
-integration from this Phase 0 guide.
-
-## 4. Phase 0 verification
-
-Run the diagnostic framework:
+Create the five active registries from the reviewed examples, then customize
+only non-secret metadata:
 
 ```bash
-./scripts/doctor.sh
+for name in settings agents teams projects permissions; do
+  cp -n "config/${name}.example.yaml" "config/${name}.yaml"
+done
 ```
 
-The doctor command reports `PASS`, `WARN`, `FAIL`, `NOT IMPLEMENTED`, and
-`MAC-VERIFY` separately. It checks only whether `.env` exists and never prints
-its contents or secret values.
+Set every project's `base_branch` to the reviewed remote default branch. Enable
+exactly one Developer for the test product team. Before any service write, run:
+
+```bash
+uv run --locked --no-dev ai-hub check-config
+uv run --locked --no-dev ai-hub migrate
+```
+
+Keep Slack token values only in `.env`. Set `AI_HUB_SLACK_ENABLED=true`, the bot
+and app token variables, and `AI_HUB_SLACK_ALLOWED_USER_IDS` only after the Slack
+app and least-privilege allowlist are ready.
+
+## 4. Phase 1 service installation and verification
+
+Validate configuration and initialize storage before installing the service:
+
+```bash
+uv run --locked --no-dev ai-hub check-config
+uv run --locked --no-dev ai-hub migrate
+```
 
 Verify the workspace remains local runtime state:
 
@@ -92,20 +112,75 @@ git status --short
 Expected directories are `projects`, `tasks`, `memory`, `indexes`, `locks`,
 `artifacts`, and `logs`.
 
-## 5. Phase 1 placeholders — do not execute yet
+Install the exact per-user launchd definition, then load and start it explicitly:
 
-The following acceptance steps are intentionally locked until Phase 1 is
-approved and implemented:
+```bash
+./launchd/install.sh
+./scripts/start.sh
+./scripts/status.sh
+./scripts/doctor.sh
+```
 
-- [ ] Start the Agent Gateway, orchestrator, and Codex runtime adapter.
-- [ ] Configure Slack Socket Mode and send a test task.
-- [ ] Install and load a reviewed `launchd` service definition.
-- [ ] `[MAC-VERIFY]` Reboot and confirm automatic recovery.
-- [ ] `[MAC-VERIFY]` Confirm log rotation and failure recovery.
-- [ ] Run an end-to-end test task in a disposable project repository.
+The doctor command reports `PASS`, `WARN`, `FAIL`, and `MAC-VERIFY` separately.
+It checks secret presence when required but never prints secret values.
 
-`scripts/start.sh`, `stop.sh`, `restart.sh`, and `status.sh` deliberately exit
-with code 3 in Phase 0. They do not report fake service success.
+The generated plist contains absolute executable, repository, and log paths but
+no secrets. It controls only `gui/<uid>/com.macmini-ai-hub.service`. Remove it
+with `./launchd/uninstall.sh`; the removal script rejects an unexpected label or
+path.
+
+- [ ] `[MAC-VERIFY]` Send a Slack fixture request and confirm quick acknowledgement.
+- [ ] `[MAC-VERIFY]` Confirm the fixture uses a registered project, task branch,
+  exclusive lock, and Codex runtime without changing any other repository.
+- [ ] `[MAC-VERIFY]` Confirm Codex can edit the fixture and run its safe checks
+  while command network/web search remain disabled and untrusted operations fail
+  closed when no approval channel is available.
+- [ ] `[MAC-VERIFY]` Stop and start the service and inspect redacted log output.
+- [ ] `[MAC-VERIFY]` Reboot and confirm recovery and localhost-only readiness.
+
+## 5. Operator runbooks
+
+### Backup and restore
+
+Stop the service before a cold backup. Back up committed configuration with Git,
+copy `.env` only through an encrypted secret-recovery channel, and use SQLite's
+online backup command for a running database when a cold stop is not possible.
+Retain `workspace/tasks/ai-hub.sqlite3`, required artifacts, and any logs needed
+for an incident. Project repositories can normally be reconstructed from their
+registered origins and pushed task branches.
+
+To restore, stop the service, restore the database to the configured exact path,
+set ownership to the dedicated account and mode `600`, run doctor, then start.
+Never restore stale lock files. `[MAC-VERIFY]` Perform a disposable backup and
+restore drill before relying on it.
+
+### Stuck project lock
+
+1. Stop the service and confirm no AI Hub or Codex task process remains.
+2. Inspect only `project`, `task`, `created_at`, and `pid` in the exact
+   `workspace/locks/<project>.lock` file.
+3. Confirm the age exceeds policy and the PID is absent. Malformed locks are
+   never removed automatically.
+4. Move that one verified file to a private quarantine directory, restart, and
+   retain it for incident review. Never wildcard-delete the lock directory.
+
+### Runtime failure or Slack disconnect
+
+Run `./scripts/status.sh` and `./scripts/doctor.sh`. Inspect the bounded service
+logs under `workspace/logs` without pasting token-bearing input. A runtime
+failure remains recorded on its task; do not rerun by deleting database rows.
+For Slack, verify allowlisted users, token *presence*, network access, and Socket
+Mode reconnect state without printing token values. Restart once after fixing
+configuration; repeated failure requires log and event investigation.
+
+### Update and rollback
+
+Stop the service, require a clean infrastructure checkout, fetch reviewed
+changes, and update with `git pull --ff-only`. Run `uv sync --locked --no-dev`,
+the full test suite, `./launchd/install.sh`, doctor, and start. Back up SQLite
+before any migration. Prefer a reviewed Git revert for rollback; never use
+`reset --hard`, force-push, or `clean`. Restore a pre-migration database backup
+only with the matching reviewed code version.
 
 ## Troubleshooting
 
@@ -114,5 +189,6 @@ with code 3 in Phase 0. They do not report fake service success.
 - `brew` not found: follow the post-install PATH instructions printed by the
   official Homebrew installer, open a new shell, and rerun bootstrap.
 - Missing workspace directory: run `./bootstrap/init-workspace.sh`.
-- Doctor failure: fix each `FAIL`; `WARN` and `MAC-VERIFY` require review, while
-  `NOT IMPLEMENTED` is an honest phase boundary rather than a healthy service.
+- Service not installed: run `./launchd/install.sh` as the dedicated user; do
+  not use `sudo` or copy it into `/Library/LaunchDaemons`.
+- Doctor failure: fix each `FAIL`; `WARN` and `MAC-VERIFY` require review.

@@ -3,41 +3,22 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
-WORKSPACE_ROOT="${REPO_ROOT}/workspace"
 
 pass_count=0
 warn_count=0
 fail_count=0
 
-pass() {
-  pass_count=$((pass_count + 1))
-  printf '[PASS] %s\n' "$1"
-}
-
-warn() {
-  warn_count=$((warn_count + 1))
-  printf '[WARN] %s\n' "$1"
-}
-
-fail() {
-  fail_count=$((fail_count + 1))
-  printf '[FAIL] %s\n' "$1"
-}
-
-not_implemented() {
-  printf '[NOT IMPLEMENTED] %s\n' "$1"
-}
-
-mac_verify() {
-  printf '[MAC-VERIFY] %s\n' "$1"
-}
+pass() { pass_count=$((pass_count + 1)); printf '[PASS] %s\n' "$1"; }
+warn() { warn_count=$((warn_count + 1)); printf '[WARN] %s\n' "$1"; }
+fail() { fail_count=$((fail_count + 1)); printf '[FAIL] %s\n' "$1"; }
+mac_verify() { printf '[MAC-VERIFY] %s\n' "$1"; }
 
 check_required_command() {
   local command_name="$1"
   if command -v "${command_name}" >/dev/null 2>&1; then
     pass "${command_name} is available"
   else
-    fail "${command_name} is missing (run bootstrap/bootstrap-macos.sh on macOS)"
+    fail "${command_name} is missing"
   fi
 }
 
@@ -51,101 +32,98 @@ check_optional_command() {
   fi
 }
 
-printf '%s\n' "AI Hub Phase 0 doctor"
+printf '%s\n' "AI Hub Phase 1 doctor"
 printf '%s\n' "Repository: ${REPO_ROOT}"
 printf '%s\n' "Diagnostic output reports presence and status only; it never prints secret values."
-printf '%s\n' "[IMPLEMENTED] Phase 0 repository, toolchain, workspace, and configuration-presence checks"
 
-if [[ -e "${REPO_ROOT}/.git" ]]; then
-  pass "repository metadata is present"
+if [[ -e "${REPO_ROOT}/.git" && -f "${REPO_ROOT}/pyproject.toml" ]]; then
+  pass "repository root is valid"
 else
-  fail "repository metadata is missing"
+  fail "repository root is invalid"
 fi
 
-if [[ "$(uname -s)" == "Darwin" ]]; then
-  pass "host operating system is macOS"
-  if [[ "$(uname -m)" == "arm64" ]]; then
-    pass "host architecture is Apple Silicon (arm64)"
-  else
-    warn "host architecture is not Apple Silicon; review the intended production target"
-  fi
-  if /usr/bin/xcode-select -p >/dev/null 2>&1; then
-    pass "Xcode Command Line Tools are selected"
-  else
-    fail "Xcode Command Line Tools are not selected"
-  fi
-else
-  warn "current host is not macOS; production checks require the Mac mini"
-fi
-
-for required_command in brew git gh uv node shellcheck; do
+for required_command in git gh uv codex; do
   check_required_command "${required_command}"
 done
+check_optional_command node "reserved for later UI tooling"
+check_optional_command shellcheck "operator script linting"
+check_optional_command docker "not required by the native Phase 1 runtime"
 
-if [[ -x "${REPO_ROOT}/.venv/bin/python" ]]; then
-  pass "locked Python development environment is synchronized"
+if [[ -x "${REPO_ROOT}/.venv/bin/python" || -x "${REPO_ROOT}/.venv/Scripts/python.exe" ]]; then
+  pass "locked Python environment is synchronized"
 else
-  fail ".venv/bin/python is missing (run bootstrap/bootstrap-macos.sh on macOS)"
+  fail "locked Python environment is missing; run bootstrap/bootstrap-macos.sh"
 fi
 
-# These tools are expected by later phases but are not installed by the Phase 0
-# baseline. Presence is useful information; absence is not a Phase 0 failure.
-check_optional_command codex "runtime integration begins in Phase 1"
-check_optional_command docker "container use remains an explicit future decision"
-
-workspace_directories=(
-  projects
-  tasks
-  memory
-  indexes
-  locks
-  artifacts
-  logs
-)
-
-for directory in "${workspace_directories[@]}"; do
-  workspace_path="${WORKSPACE_ROOT}/${directory}"
-  if [[ -d "${workspace_path}" && -w "${workspace_path}" ]]; then
-    pass "workspace/${directory} exists and is writable"
-  elif [[ -d "${workspace_path}" ]]; then
-    fail "workspace/${directory} exists but is not writable"
-  else
-    fail "workspace/${directory} is missing (run bootstrap/init-workspace.sh)"
-  fi
-done
-
 if [[ -f "${REPO_ROOT}/.env" ]]; then
-  pass ".env exists (contents intentionally not inspected or displayed)"
+  pass ".env exists (values not displayed)"
 else
-  warn ".env is absent; create it from .env.example when machine-specific configuration is needed"
+  fail ".env is missing; create it from .env.example"
 fi
 
 if command -v gh >/dev/null 2>&1; then
   if gh auth status >/dev/null 2>&1; then
     pass "GitHub CLI reports an authenticated session"
   else
-    warn "GitHub CLI is not authenticated; run 'gh auth login' on the Mac mini"
+    warn "GitHub CLI is not authenticated"
   fi
 fi
 
-not_implemented "Agent Gateway health check (Phase 1)"
-not_implemented "Orchestrator health check (Phase 1)"
-not_implemented "Codex runtime authentication check (Phase 1)"
-not_implemented "Slack configuration and connection check (Phase 1)"
-not_implemented "launchd service and reboot recovery check (Phase 1)"
+if command -v uv >/dev/null 2>&1; then
+  set +e
+  PORTABLE_OUTPUT="$(cd -- "${REPO_ROOT}" && uv run --locked --no-dev python \
+    "${SCRIPT_DIR}/doctor_portable.py" --repository-root "${REPO_ROOT}" 2>&1)"
+  PORTABLE_EXIT=$?
+  set -e
+  printf '%s\n' "${PORTABLE_OUTPUT}"
+  if (( PORTABLE_EXIT != 0 )); then
+    fail_count=$((fail_count + 1))
+  fi
+else
+  fail "portable configuration, database, lock, and health checks could not run"
+fi
 
-mac_verify "Homebrew prefix and shell PATH on Apple Silicon"
-mac_verify "workspace ownership, permissions, and disk capacity"
-mac_verify "GitHub SSH/CLI authentication for the production account"
-mac_verify "Codex installation and authentication before Phase 1"
-mac_verify "Docker requirement and runtime if a later phase adopts it"
-mac_verify "Slack Socket Mode connection after Phase 1 implementation"
-mac_verify "launchd loading and automatic recovery after reboot in Phase 1"
-mac_verify "power, sleep, FileVault, and reboot behavior"
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  pass "host operating system is macOS"
+  if /usr/bin/xcode-select -p >/dev/null 2>&1; then
+    pass "Xcode Command Line Tools are selected"
+  else
+    fail "Xcode Command Line Tools are not selected"
+  fi
+  SERVICE_PLIST="${HOME}/Library/LaunchAgents/com.macmini-ai-hub.service.plist"
+  if [[ -f "${SERVICE_PLIST}" ]]; then
+    INSTALLED_LABEL="$(/usr/libexec/PlistBuddy -c 'Print :Label' "${SERVICE_PLIST}" 2>/dev/null || true)"
+    if [[ "${INSTALLED_LABEL}" == "com.macmini-ai-hub.service" ]]; then
+      pass "launchd service plist is installed with the expected label"
+      SERVICE_TARGET="gui/$(id -u)/com.macmini-ai-hub.service"
+      if /bin/launchctl print "${SERVICE_TARGET}" >/dev/null 2>&1; then
+        SERVICE_PID="$(/bin/launchctl print "${SERVICE_TARGET}" 2>/dev/null |
+          /usr/bin/awk '/^[[:space:]]*pid = [0-9]+$/ { print $3; exit }')"
+        if [[ -n "${SERVICE_PID}" ]]; then
+          pass "launchd service process is running"
+        else
+          fail "launchd service is loaded but not running"
+        fi
+      else
+        fail "launchd service is installed but not loaded"
+      fi
+    else
+      fail "launchd plist label does not match the expected service"
+    fi
+  else
+    fail "launchd service is not installed"
+  fi
+else
+  warn "current host is not macOS; launchd and hardware checks were skipped"
+fi
 
-printf '\nSummary: %d pass, %d warning, %d failure.\n' "${pass_count}" "${warn_count}" "${fail_count}"
-printf '%s\n' "Phase 1 services are intentionally not implemented and are not counted as passing checks."
+mac_verify "Codex authentication with a disposable fixture task"
+mac_verify "Slack Socket Mode connectivity and reconnect behavior"
+mac_verify "launchd start, stop, crash restart, login, and reboot recovery"
+mac_verify "Homebrew prefix, power, sleep, FileVault, firewall, and disk capacity"
 
+printf '\nSummary: %d local pass, %d local warning, %d local failure.\n' \
+  "${pass_count}" "${warn_count}" "${fail_count}"
 if (( fail_count > 0 )); then
   exit 1
 fi

@@ -5,18 +5,27 @@ build-backend = "hatchling.build"
 [project]
 name = "macmini-ai-hub"
 version = "0.1.0"
-description = "Foundation for a reproducible, single-Mac AI agent platform"
+description = "Reproducible, secure AI agent hub for one Apple Silicon Mac mini"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Mac Mini AI Hub contributors" }]
 dependencies = [
+  "aiohttp>=3.10,<4",
+  "fastapi>=0.116,<1",
   "pydantic>=2.10,<3",
+  "pydantic-settings>=2.10,<3",
   "PyYAML>=6.0.2,<7",
+  "slack-bolt>=1.23,<2",
+  "uvicorn>=0.35,<1",
 ]
+
+[project.scripts]
+ai-hub = "macmini_ai_hub.cli:main"
 
 [dependency-groups]
 dev = [
+  "httpx2>=2.12,<3",
   "mypy>=1.15,<2",
   "pytest>=9.0.3,<10",
   "pytest-cov>=6,<7",

@@ -2,9 +2,9 @@
 
 Mac Mini AI Hub is an infrastructure-as-code and agent-platform-as-code project for a single, always-on Apple Silicon Mac mini. It is intended to host reusable AI agents, product-specific teams, project workspaces, scheduled automations, and human interfaces without turning a personal server into a distributed platform.
 
-> **Current phase: Phase 1 — Core AI Hub MVP (in progress)**
+> **Current phase: Phase 1 — implementation complete, production validation pending**
 >
-> Phase 2 and later are locked. Phase 1 is limited to the approved single-Developer Slack-to-Codex flow; multi-agent workflows and Pixel Agent Office remain out of scope.
+> The offline suite passes. Live Slack, authenticated Codex, launchd, and reboot checks remain `[MAC-VERIFY]` on the target Mac mini. Phase 2 and later are locked.
 
 The engineering priority is:
 
@@ -13,18 +13,20 @@ Reproducibility > Reliability > Security > Maintainability
 > Extensibility > Operational simplicity > Fancy features
 ```
 
-## What exists in Phase 0
+## What exists
 
-- documented boundaries and dependency rules;
-- strict, validated example settings and agent/team/project/permission registries;
-- task lifecycle and observable event contracts;
-- a disabled runtime implementation that cannot invoke Codex accidentally;
-- a Python 3.12 development baseline and deterministic tests;
-- safe macOS bootstrap and doctor skeletons;
-- ignored runtime workspace conventions;
-- security, contribution, phase-gate, and architecture decision records.
+- strict settings and cross-validated agent/team/project/permission registries;
+- source-neutral Agent Gateway with authorization and durable request deduplication;
+- Slack Bolt Socket Mode commands with background handling and idempotent delivery;
+- SQLite migrations and durable task, event, run, artifact, route, and receipt state;
+- a single-Developer orchestrator with bounded concurrency, cancellation, and restart recovery;
+- an explicit-argument Codex CLI adapter with workspace-write sandboxing, untrusted-command approval policy, network-off execution, timeout, cancellation, and bounded redacted output;
+- registered project clone/select, remote-base task branches, and per-project file locks;
+- structured events, replay projections, rotating redacted JSON logs, and localhost health/readiness;
+- generated per-user launchd service operations, doctor checks, and recovery runbooks;
+- deterministic offline integration from Gateway through a fake runtime to persisted completion.
 
-Phase 0 establishes contracts only. See [the phase plan](docs/PHASES.md) and [machine-readable status](docs/PHASE_STATUS.yaml).
+See [the phase plan](docs/PHASES.md), [machine-readable status](docs/PHASE_STATUS.yaml), and [Phase 1 completion report](docs/PHASE_1_COMPLETION_REPORT.md).
 
 ## Target architecture
 
@@ -65,17 +67,17 @@ An interface never calls Codex directly. Platform policy and domain contracts do
 - A **project** is source code and its isolated workspace; it is not a team.
 - A **task** is the durable unit of requested work and references its source, project, team, agents, status, and timestamps.
 
-Phase 0 can represent these relationships but does not execute a team workflow.
+Phase 1 executes exactly one enabled Developer for the selected product project. Reviewer, QA, delegation, and other multi-agent chains remain Phase 2 work.
 
 ## Repository map
 
 ```text
-config/                 safe example registries; never credentials
-src/macmini_ai_hub/     Phase 0 domain, config, and runtime contracts
-tests/                  foundational contract and validation tests
-bootstrap/              safe macOS bootstrap skeleton
-scripts/                doctor and lifecycle command skeletons
-launchd/                inactive future service examples
+config/                 safe examples plus ignored machine-local registries
+src/macmini_ai_hub/     domain, gateway, orchestrator, adapters, and composition
+tests/                  offline contract, failure, recovery, and integration tests
+bootstrap/              idempotent macOS setup
+scripts/                doctor and exact lifecycle operations
+launchd/                generated per-user service template and installer
 workspace/              ignored runtime projects, tasks, locks, artifacts, logs
 docs/                   phase plan, first-boot guide, and ADRs
 ```
@@ -92,7 +94,15 @@ Safe templates live in `config/*.example.yaml`:
 - `projects.example.yaml`
 - `permissions.example.yaml`
 
-They are validated together, including agent/team, team/project, and permission-profile references. Copy templates to machine-local configuration only when the implementation directs it. Never add tokens, passwords, private repository credentials, or private keys to YAML.
+They are validated together, including agent/team, team/project, permission-profile, and workspace relationships. Create ignored active registries before starting the service:
+
+```bash
+for name in settings agents teams projects permissions; do
+  cp -n "config/${name}.example.yaml" "config/${name}.yaml"
+done
+```
+
+Customize the project repository/workspace/`base_branch` and enable exactly one product-team Developer using the `codex` runtime and a project-workspace permission profile. The public examples are validation fixtures and are not a runnable private-project configuration. Never add tokens, passwords, repository credentials, or private keys to YAML.
 
 Machine secrets belong in an untracked `.env` or a future approved macOS secret store. Start from `.env.example` and verify it remains untracked before adding values.
 
@@ -116,21 +126,25 @@ make typecheck
 make check
 ```
 
-Tests must not require Slack, Codex, network access, or a physical Mac mini. A Phase 0 runtime is deliberately disabled.
+Primary tests require no Slack, Codex service call, network access, or physical Mac mini. Fake executables and adapters exercise timeout, cancellation, persistence, locks, and end-to-end lifecycle behavior offline.
+
+The current Phase 1 closeout result is 277 passing tests with 86% statement coverage, plus clean Ruff, mypy, Bash syntax, and locked-dependency vulnerability checks.
 
 ## Mac mini installation
 
-The intended fresh-machine flow is eventually:
+The intended fresh-machine flow is:
 
 ```bash
 git clone https://github.com/4LPH4C4/AI_infrastructure_as_Code.git
 cd AI_infrastructure_as_Code
 cp .env.example .env
 ./bootstrap/bootstrap-macos.sh
+./launchd/install.sh
 ./scripts/start.sh
+./scripts/doctor.sh
 ```
 
-In Phase 0, bootstrap can install declared Homebrew packages and initialize workspace directories after checking prerequisites. Lifecycle commands intentionally report **not implemented** until Phase 1. Follow [the first-boot checklist](docs/MAC_MINI_FIRST_BOOT.md); every item requiring physical hardware is marked `[MAC-VERIFY]` and has not been claimed as tested.
+Before installation, create and review the active registries and configure `.env`. Bootstrap installs the locked baseline and initializes private workspace directories but does not start the service. Follow [the first-boot checklist](docs/MAC_MINI_FIRST_BOOT.md); hardware and live-service items marked `[MAC-VERIFY]` have not been claimed as tested.
 
 ## Operations and troubleshooting
 
@@ -138,17 +152,20 @@ Run:
 
 ```bash
 ./scripts/doctor.sh
+./scripts/start.sh
+./scripts/status.sh
+./scripts/restart.sh
+./scripts/stop.sh
 ```
 
-Doctor distinguishes `PASS`, `WARN`, `FAIL`, `NOT IMPLEMENTED`, and `[MAC-VERIFY]`; it must never print secret values. In Phase 0, service status and runtime checks being unimplemented is expected. Check [the roadmap](ROADMAP.md) before treating future commands as defects.
-
-Long-term acceptance requires reboot recovery, Slack Socket Mode, real task execution, and one-command diagnosis. Those are Phase 1 gates, not current capabilities.
+Doctor reports presence and status without printing values. `GET /health` means the process is alive; `GET /ready` checks storage, workspace, and the configured runtime and is bound to `127.0.0.1` by default. Backup, stale-lock, Slack disconnect, update, and rollback procedures are in the first-boot guide.
 
 ## Security and Git
 
 - Do not expose database, admin, debug, health, or visualization services to the public Internet by default.
 - Do not commit `.env`, credentials, keys, logs, task data, artifacts, or managed project workspaces.
 - Autonomous project agents default to `auto_push: false` and `auto_merge: false`; force-push and destructive Git operations are prohibited.
+- Codex runs with user config ignored, command network and web search disabled, and untrusted commands requiring approval. In the non-interactive service, unavailable approval fails closed.
 - Human-authorized repository maintenance may commit and push reviewed changes to `origin` using normal, non-force Git operations.
 - Treat commands such as `rm -rf`, `git clean -fd`, `git reset --hard`, database deletion, secret changes, and production deployment as dangerous operations requiring exact-scope review and human approval.
 
@@ -156,4 +173,4 @@ Read [SECURITY.md](SECURITY.md) before enabling any external integration and [CO
 
 ## Phase gate
 
-No contributor or agent may implement Phase 1 without explicit user approval. The exact Phase 1 backlog is frozen in [docs/PHASES.md](docs/PHASES.md); approval should be an unambiguous instruction such as `Proceed with Phase 1.`
+Phase 1 implementation is complete but production acceptance still requires the listed `[MAC-VERIFY]` checks. No contributor or agent may implement Phase 2 until the Phase 1 report is reviewed and the user explicitly authorizes it. Multi-agent Reviewer/QA flows, Pixel Office, public endpoints, automatic push/merge, and deployment remain prohibited.

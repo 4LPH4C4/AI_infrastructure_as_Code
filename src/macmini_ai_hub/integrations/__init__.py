@@ -1,0 +1,43 @@
+"""External integration adapters."""
+
+from macmini_ai_hub.integrations.slack import (
+    DeliveryOutcome,
+    DeliveryReceiptStore,
+    InMemoryDeliveryReceiptStore,
+    RetryingSlackDelivery,
+    SlackCommandError,
+    SlackDeliveryFailed,
+    SlackDeliveryPort,
+    SlackDeliveryRequest,
+    SlackMessageSender,
+    SlackRoute,
+    SlackSocketModeService,
+    SlackTaskNotifier,
+    SlackWebClientSender,
+    TaskLifecycleUpdate,
+    decode_slack_route_target,
+    encode_slack_route_target,
+    format_task_update,
+    parse_slack_command,
+)
+
+__all__ = [
+    "DeliveryOutcome",
+    "DeliveryReceiptStore",
+    "InMemoryDeliveryReceiptStore",
+    "RetryingSlackDelivery",
+    "SlackCommandError",
+    "SlackDeliveryFailed",
+    "SlackDeliveryPort",
+    "SlackDeliveryRequest",
+    "SlackMessageSender",
+    "SlackRoute",
+    "SlackSocketModeService",
+    "SlackTaskNotifier",
+    "SlackWebClientSender",
+    "TaskLifecycleUpdate",
+    "decode_slack_route_target",
+    "encode_slack_route_target",
+    "format_task_update",
+    "parse_slack_command",
+]

@@ -4,7 +4,7 @@
 
 Mac Mini AI Hub is a modular monolith designed to run natively on one Apple Silicon Mac mini. The Mac mini is the only production runtime. Development computers are temporary authoring environments, not worker nodes, failover nodes, or members of a cluster.
 
-Phase 0 defines contracts and validation. It intentionally contains no live interface, Codex adapter, task worker, storage server, or visualization. The architecture below is the target shape; implementation is added only at the phase named in `docs/PHASES.md`.
+Phase 1 implements the single-Developer slice of this modular monolith: Slack Socket Mode, the source-neutral gateway, SQLite-backed orchestration, isolated Git workspaces, one Codex adapter, observable events, and local operations. Phase 2+ capabilities remain gated in `docs/PHASES.md`.
 
 Key constraints:
 
@@ -82,7 +82,7 @@ The initial implementation stays a modular monolith. These boundaries support su
 
 ### 4.1 Interface layer
 
-Adapters translate external protocols into an interface-neutral request and translate result projections back to the source. Slack Socket Mode is planned first; CLI, HTTP, webhooks, web/mobile UIs, and scheduled jobs can later use the same gateway.
+Adapters translate external protocols into an interface-neutral request and translate result projections back to the source. Phase 1 implements Slack Socket Mode; CLI task submission, HTTP task APIs, webhooks, web/mobile UIs, and scheduled jobs can later use the same gateway.
 
 An interface may:
 
@@ -122,9 +122,9 @@ The runtime protocol separates an agent from its execution engine:
 Agent role -> Runtime protocol -> Codex/API/local implementation
 ```
 
-An execution request identifies task, agent, project, resolved working directory, instruction, timeout/policy, and correlation context. The Phase 0 DTO captures start/end, status, exit code where applicable, stdout/stderr, and changed-file metadata; the Phase 1 adapter must bound and redact those outputs before persistence or delivery and may persist safe references instead of large values. Runtime data must not expose secrets or hidden reasoning.
+An execution request identifies task, agent, project, resolved working directory, instruction, timeout/policy, and correlation context. The DTO captures start/end, status, exit code where applicable, bounded/redacted stdout/stderr, and changed-file metadata. Phase 1 persists only safe run metadata rather than raw output. Runtime data must not expose secrets or hidden reasoning.
 
-Phase 0 supplies only contracts and a disabled runtime. Phase 1 may add the real Codex adapter with timeouts, cancellation, bounded output, structured errors, and no shell-string interpolation.
+Phase 1 supplies one Codex CLI adapter with explicit arguments, stdin prompts, ignored user configuration, a `workspace-write` sandbox, command network/web search disabled, `untrusted` approval policy, sanitized environment, timeouts, cancellation, bounded redacted output, and no shell-string interpolation. The disabled adapter remains available for fail-closed tests/configuration.
 
 ## 5. Organization and ownership model
 
@@ -160,7 +160,7 @@ AI Hub repository/
     └── logs/                     operational logs
 ```
 
-Every execution resolves its working directory from the project registry and validates the canonical path under `workspace/projects`. No agent may default to the AI Hub root. A per-project exclusive lock is the Phase 1 starting point; configurable global concurrency begins conservatively at two tasks, while only one modifying task may use a project at a time.
+Every execution resolves its working directory from the project registry and validates the canonical path under `workspace/projects`. No agent may default to the AI Hub root. Each task branch starts explicitly from the registered `origin/<base_branch>` or validated `origin/HEAD`, so one task branch never becomes the next task's base. A per-project exclusive lock is the Phase 1 starting point; configurable global concurrency begins conservatively at two tasks, while only one modifying task may use a project at a time.
 
 Project Git policy is conservative:
 
@@ -211,7 +211,7 @@ Legal transitions are explicit; callers may not assign arbitrary state:
 | `failed` | none; retry creates a new run or task according to future policy |
 | `cancelled` | none |
 
-Every accepted transition updates timestamps and, once event persistence exists, atomically records the matching event. Process restart must reconstruct current state from durable records rather than from in-memory agent objects.
+Every accepted transition updates timestamps and atomically records the matching SQLite event. Process restart reconstructs current state from durable records and reconciles interrupted running work rather than trusting in-memory agent objects.
 
 ## 8. Event architecture
 
@@ -286,7 +286,7 @@ Controls:
 - redaction before persistence/logging/delivery;
 - localhost/private-LAN binding and no unnecessary public inbound ports;
 - explicit human approval for destructive Git/filesystem/database, secret, deploy, or exposure actions;
-- no claim that Phase 0 configuration permissions are already an OS sandbox.
+- permission profiles express policy intent; the Codex `workspace-write` sandbox and canonical workspace checks add enforcement, but configuration alone is never treated as proof of OS isolation.
 
 Slack Socket Mode is preferred in Phase 1 to avoid a public webhook into a home network. Credentials stay in untracked machine configuration or an approved secret store. See `SECURITY.md` for operating policy.
 
@@ -294,9 +294,9 @@ Slack Socket Mode is preferred in Phase 1 to avoid a public webhook into a home 
 
 Native processes are preferred for the gateway, orchestrator, and Codex runtime because they need direct filesystem and CLI access. Containers are reserved for services that gain clear isolation/packaging value; do not containerize everything or add Kubernetes. n8n, PostgreSQL, Redis, and Docker services require later justification.
 
-The bootstrap sequence checks Xcode Command Line Tools and Homebrew, installs the reviewed Brewfile, and initializes workspace directories. It detects paths instead of assuming x86 or `/opt/homebrew`. Lifecycle scripts remain deliberately inactive until the service exists.
+The bootstrap sequence checks Xcode Command Line Tools and Homebrew, installs the reviewed Brewfile, and initializes workspace directories. It detects paths instead of assuming x86 or `/opt/homebrew`. Lifecycle scripts operate only on the exact generated per-user service target.
 
-Phase 1 may add launchd definitions for boot recovery and commands for install/start/stop/restart/status/remove. Hardware-dependent results remain `[MAC-VERIFY]` until executed on the target Mac mini, especially power/sleep behavior, Homebrew/CLT, workspace permissions, GitHub/Codex authentication, Docker, launchd loading, reboot recovery, and Slack connectivity.
+Phase 1 includes inactive-by-default launchd generation plus install/start/stop/restart/status/remove commands. Hardware-dependent results remain `[MAC-VERIFY]` until executed on the target Mac mini, especially power/sleep behavior, Homebrew/CLT, workspace permissions, GitHub/Codex authentication, launchd loading, reboot recovery, and Slack connectivity.
 
 ## 13. Failure and recovery principles
 
@@ -312,9 +312,8 @@ Expected failures include invalid configuration, malformed/unauthorized tasks, m
 
 ## 14. Deferred technology
 
-The following choices are directions, not Phase 0 implementations:
+The following choices remain gated directions, not current implementations:
 
-- Phase 1: Slack Bolt Socket Mode, basic gateway/orchestrator, Codex adapter, SQLite, structured logs, localhost health/readiness, launchd;
 - Phase 2: product/shared multi-agent workflows, reviewer/QA, permissions enforcement, handoffs and artifacts;
 - Phase 3: TypeScript + Phaser with SSE/WebSocket read projections;
 - Phase 4: justified scheduling, n8n, GitHub workflows, integrations, analytics, and backups.

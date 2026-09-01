@@ -5,3 +5,4 @@ projects:
     repository: https://github.com/example/example-project.git
     workspace: workspace/projects/example-project
     team: example-product
+    base_branch: main

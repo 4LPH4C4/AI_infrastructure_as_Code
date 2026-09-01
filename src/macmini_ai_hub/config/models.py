@@ -36,6 +36,16 @@ ModelName = Annotated[
     str,
     StringConstraints(strict=True, strip_whitespace=True, min_length=1, max_length=120),
 ]
+GitBranchName = Annotated[
+    str,
+    StringConstraints(
+        strict=True,
+        strip_whitespace=True,
+        min_length=1,
+        max_length=120,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]*$",
+    ),
+]
 
 
 class StrictModel(BaseModel):
@@ -202,6 +212,7 @@ class ProjectDefinition(StrictModel):
     ]
     workspace: str
     team: Identifier
+    base_branch: GitBranchName | None = None
 
     @field_validator("repository")
     @classmethod
@@ -228,6 +239,22 @@ class ProjectDefinition(StrictModel):
     @classmethod
     def validate_workspace(cls, value: str) -> str:
         return _validate_relative_path(value, "workspace")
+
+    @field_validator("base_branch")
+    @classmethod
+    def validate_base_branch(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        parts = value.split("/")
+        if (
+            ".." in value
+            or "@{" in value
+            or "//" in value
+            or value.endswith(("/", ".", ".lock"))
+            or any(part.startswith(".") or part.endswith(".") for part in parts)
+        ):
+            raise ValueError("base_branch is not a safe Git branch name")
+        return value
 
 
 class ProjectRegistry(StrictModel):
