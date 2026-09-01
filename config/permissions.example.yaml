@@ -1,0 +1,12 @@
+schema_version: 1
+permissions:
+  orchestrator:
+    - read
+  developer:
+    - read
+    - write
+    - execute
+    - git
+  reviewer:
+    - read
+    - execute

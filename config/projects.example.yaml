@@ -1,0 +1,7 @@
+schema_version: 1
+projects:
+  example-project:
+    display_name: Example Project
+    repository: https://github.com/example/example-project.git
+    workspace: workspace/projects/example-project
+    team: example-product

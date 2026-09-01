@@ -1,0 +1,14 @@
+schema_version: 1
+settings:
+  instance_name: Mac Mini AI Hub
+  environment: local
+  timezone: Asia/Seoul
+  workspace_root: workspace
+  log_level: INFO
+  max_concurrent_tasks: 2
+  default_runtime: disabled
+  git:
+    auto_commit: false
+    auto_push: false
+    auto_merge: false
+    allow_force_push: false

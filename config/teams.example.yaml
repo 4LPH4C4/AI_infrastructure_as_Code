@@ -1,0 +1,16 @@
+schema_version: 1
+teams:
+  shared-services:
+    type: platform
+    display_name: Shared Services
+    room: shared-services
+    agents:
+      - orchestrator
+      - shared-reviewer
+  example-product:
+    type: product
+    display_name: Example Product Team
+    room: example-product
+    project: example-project
+    agents:
+      - example-developer

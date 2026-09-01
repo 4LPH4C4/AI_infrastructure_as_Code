@@ -1,0 +1,53 @@
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials/
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest-tmp/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+.uv-cache/
+dist/
+build/
+*.egg-info/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime state. Keep only the documented directory markers.
+workspace/projects/*
+workspace/tasks/*
+workspace/memory/*
+workspace/indexes/*
+workspace/locks/*
+workspace/artifacts/*
+workspace/logs/*
+!workspace/projects/.gitkeep
+!workspace/tasks/.gitkeep
+!workspace/memory/.gitkeep
+!workspace/indexes/.gitkeep
+!workspace/locks/.gitkeep
+!workspace/artifacts/.gitkeep
+!workspace/logs/.gitkeep
+
+# Local logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db

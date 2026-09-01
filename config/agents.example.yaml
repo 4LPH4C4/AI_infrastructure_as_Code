@@ -1,0 +1,32 @@
+schema_version: 1
+agents:
+  orchestrator:
+    role: orchestrator
+    team: shared-services
+    runtime: codex
+    enabled: true
+    permission_profile: orchestrator
+    working_directory_policy: read-only
+    skills: []
+    tools: []
+    max_concurrency: 1
+  shared-reviewer:
+    role: reviewer
+    team: shared-services
+    runtime: codex
+    enabled: true
+    permission_profile: reviewer
+    working_directory_policy: read-only
+    skills: []
+    tools: []
+    max_concurrency: 1
+  example-developer:
+    role: developer
+    team: example-product
+    runtime: codex
+    enabled: false
+    permission_profile: developer
+    working_directory_policy: project-workspace
+    skills: []
+    tools: []
+    max_concurrency: 1
