@@ -17,6 +17,14 @@ Key constraints:
 
 ## 2. System context
 
+The primary operating model is Slack control/conversation, private-LAN web
+observation, and execution on the Mac mini with minimal monitor interaction.
+Phase 2 direct specialist addressing still passes through Gateway and Orchestrator.
+Phase 3 adds an authenticated responsive read-only dashboard before optional Pixel
+presentation. A user-facing coordinating agent is distinct from the orchestration
+service and cannot bypass its policies. See
+[ADR-0005](docs/adr/0005-slack-control-lan-observation-and-agent-addressing.md).
+
 ```text
                    Human and automation interfaces
         Slack | CLI | HTTP API | Web UI | Scheduler | Webhook

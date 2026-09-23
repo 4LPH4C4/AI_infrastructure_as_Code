@@ -165,9 +165,19 @@ P1-01 through P1-14 are implemented and pass the offline gates as of 2026-09-01:
 
 ## Phase 2 — Product Teams and Multi-Agent Workflows
 
+Include direct Slack specialist addressing and read-only consultation, explicit
+thread/project context, and evidence-based escalation/rework tracking through the
+same Gateway and Orchestrator. Resolve native Slack bot identities versus a
+single-bot agent selector before implementation. See
+[ADR-0005](adr/0005-slack-control-lan-observation-and-agent-addressing.md).
+
 After a separate approval, operationalize shared/product teams, team-aware routing, Developer→Reviewer→QA, delegation, permissions enforcement, artifact handoffs, and parallel-safe histories. Do not implement it as part of a Phase 1 “enhancement.”
 
 ## Phase 3 — Pixel Agent Office
+
+Deliver a responsive, authenticated private-LAN read-only dashboard for phones,
+tablets, and PCs before adding the Pixel presentation. Both consume the same
+Task/Event projections; Slack remains the instruction interface.
 
 After a separate approval, build a read-oriented Phaser/TypeScript view over real events. It must not control agents, fake state, or expose hidden reasoning.
 

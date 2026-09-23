@@ -30,6 +30,13 @@ See [the phase plan](docs/PHASES.md), [machine-readable status](docs/PHASE_STATU
 
 ## Target architecture
 
+The operating target is **Slack for instructions and conversation, private-LAN web
+for observation, and one always-on Mac mini for execution**. Phase 2 will allow
+addressing individual agents through the same Gateway/Orchestrator controls.
+Phase 3 will add a responsive read-only dashboard for phones, tablets, and PCs,
+with Pixel Office as an additional view. These capabilities are planned, not
+enabled. See [ADR-0005](docs/adr/0005-slack-control-lan-observation-and-agent-addressing.md).
+
 ```text
 Slack / CLI / Web / API / Scheduler       (interfaces)
                     |
@@ -131,6 +138,10 @@ Primary tests require no Slack, Codex service call, network access, or physical 
 The current Phase 1 closeout result is 277 passing tests with 86% statement coverage, plus clean Ruff, mypy, Bash syntax, and locked-dependency vulnerability checks.
 
 ## Mac mini installation
+
+Before the Mac is available, use the [offline preparation record](docs/OFFLINE_PREPARATION.md)
+for safe local registry setup and verification limits. The [Agency Agents reuse review](docs/AGENCY_AGENTS_REUSE_REVIEW.md)
+records role, workflow, and UI candidates for later authorized phases; it does not enable them.
 
 The intended fresh-machine flow is:
 

@@ -41,6 +41,12 @@ Slack Socket Mode -> Gateway -> basic Orchestrator -> Codex runtime
 
 **Goal:** make configurable shared and product organizations operational.
 
+Include direct specialist addressing from Slack, read-only consultation, explicit
+thread/project binding, and task-linked escalation to a coordinating role.
+All requests remain subject to Gateway/Orchestrator policy. Native per-agent bot
+identities versus a single-bot selector must be resolved during Phase 2 design;
+see [ADR-0005](docs/adr/0005-slack-control-lan-observation-and-agent-addressing.md).
+
 **Deliverables:** team-aware routing; shared/product agent registries in execution; multiple agents per product; Developer→Reviewer→QA; delegation, task handoff, artifact provenance, permissions enforcement, richer history, and parallel-safe scheduling.
 
 **Dependencies:** Phase 1 production acceptance and explicit approval; stable persistence/event/runtime contracts; documented permission and concurrency policy.
@@ -54,6 +60,10 @@ Slack Socket Mode -> Gateway -> basic Orchestrator -> Codex runtime
 **Status:** Locked.
 
 **Goal:** add a truthful, optional, low-load visual observability layer.
+
+Start with an authenticated, responsive private-LAN dashboard for mobile, tablet,
+and PC browsers. Add Pixel Office as an optional presentation of the same data.
+Slack remains the control interface; LAN viewing does not grant execution rights.
 
 **Deliverables:** TypeScript/Phaser browser client; SSE or WebSocket event projection; HQ overview, configuration-driven team rooms, agent detail, and task flow; real state-to-animation mapping; offline/error/idle accuracy.
 
